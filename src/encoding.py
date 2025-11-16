@@ -15,17 +15,6 @@ PIECE_INDEX = {
 
 
 def parse_fen_to_bitboards(fen: str):
-    """
-    Parse a *full* FEN string into 12 bitboards + metadata.
-
-    Returns:
-      bitboards: list[12] of ints (one for each piece type)
-      stm: "w" or "b"
-      castling: castling rights string
-      ep: en passant square string or "-"
-      halfmove: int
-      fullmove: int
-    """
     parts = fen.split()
     if len(parts) < 4:
         raise ValueError(f"Invalid FEN: {fen}")
@@ -59,10 +48,6 @@ def parse_fen_to_bitboards(fen: str):
 
 
 def bitboards_to_piece_planes(bitboards: List[int]) -> np.ndarray:
-    """
-    Convert 12 bitboards into a [12, 8, 8] planes array.
-    planes[p, row, col] = 1 if piece present, else 0.
-    """
     planes = np.zeros((12, 8, 8), dtype=np.float32)
 
     for p_idx, bb in enumerate(bitboards):
@@ -82,15 +67,6 @@ def bitboards_to_piece_planes(bitboards: List[int]) -> np.ndarray:
 
 
 def context_planes_from_meta(stm: str, castling: str, ep: str) -> np.ndarray:
-    """
-    Build 6 context planes:
-      0: side-to-move (1 for white, 0 for black)
-      1: white can castle kingside
-      2: white can castle queenside
-      3: black can castle kingside
-      4: black can castle queenside
-      5: en passant file (1s on that file if ep != "-")
-    """
     planes = []
 
     # 1) side to move
@@ -116,11 +92,6 @@ def context_planes_from_meta(stm: str, castling: str, ep: str) -> np.ndarray:
 
 
 def fen_to_board_tensor(fen: str) -> torch.Tensor:
-    """
-    Convert a full FEN into a torch tensor [18, 8, 8].
-
-    12 planes for pieces, 6 for context.
-    """
     bitboards, stm, castling, ep, halfmove, fullmove = parse_fen_to_bitboards(fen)
     piece_planes = bitboards_to_piece_planes(bitboards)
     ctx_planes = context_planes_from_meta(stm, castling, ep)
@@ -129,7 +100,9 @@ def fen_to_board_tensor(fen: str) -> torch.Tensor:
 
 
 def board_to_tensor(board: chess.Board) -> torch.Tensor:
-    """
-    Convenience helper: chess.Board → [18, 8, 8] tensor.
-    """
     return fen_to_board_tensor(board.fen())
+
+def board_to_tensor(board: chess.Board) -> torch.Tensor:
+    fen = board.fen()
+    planes = fen_to_board_tensor(fen)   # [18,8,8] float32 tensor
+    return planes
