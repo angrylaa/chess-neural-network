@@ -105,7 +105,7 @@ def negamax(board: chess.Board, depth: int, alpha: float, beta: float) -> float:
     return best
 
 
-SEARCH_DEPTH = 3
+SEARCH_DEPTH = 2
 
 
 def get_policy_probs_for_legal_moves(board: chess.Board) -> dict[Move, float]:
